@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "target": "ESNext",
+        "module": "NodeNext",
+        "moduleResolution": "bundler",
+        "noImplicitThis": true,
+        "strict": true,
+        "noImplicitAny": false,
+        "verbatimModuleSyntax": true,
+        "allowSyntheticDefaultImports": true
+    },
+    "include": [
+        "resources/js/**/*.ts"
+    ]
+}
