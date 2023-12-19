@@ -35,13 +35,10 @@ export default defineComponent({
     submit: { type: Function as PropType<VisitorFormHandler>, required: false },
     onSubmit: { type: Function as PropType<VisitorFormHandler>, required: false },
   },
-  setup(props, ctx) {
+  setup(props, { slots, expose }) {
     const context = createFormContext(props.raw || lodashCloneDeep(toValue(props.initial)));
 
-    function onSubmit(event: Event) {
-      event.stopPropagation();
-      event.preventDefault();
-
+    function submit() {
       let handler = props.submit || props.onSubmit;
 
       if (!handler) {
@@ -67,10 +64,17 @@ export default defineComponent({
       });
     }
 
+    function onSubmit(event: Event) {
+      event.stopPropagation();
+      event.preventDefault();
+      submit();
+    }
+
     provide(VisitorFormKey, context);
+    expose({ submit, context });
 
     return () => {
-      return h('form', { onSubmit, novalidate: true }, ctx.slots.default && ctx.slots.default({
+      return h('form', { onSubmit, novalidate: true }, slots.default && slots.default({
         data: context.data.value,
         errors: context.errors.value,
         submitting: context.submitting.value,
