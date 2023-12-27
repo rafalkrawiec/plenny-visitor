@@ -80,12 +80,14 @@ export type ComponentState = {
 };
 
 export type Finder = (view: string) => Promise<Component>;
-export type UpdateHandler = (state: ComponentState) => void;
+export type UpdateHandler = (state: ComponentState) => Promise<void>;
+export type ScrollHandler = () => void;
 
 type Init = {
   initial: State;
   finder: Finder;
   update: UpdateHandler;
+  scroll: ScrollHandler;
 }
 
 type Options = {
@@ -101,13 +103,15 @@ let channel: BroadcastChannel;
 class Visitor {
   protected finder!: Finder;
   protected onUpdate!: UpdateHandler;
+  protected onScroll!: ScrollHandler;
 
   protected state!: State;
   protected request: Request | undefined;
 
-  public init({ initial, finder, update }: Init): void {
+  public init({ initial, finder, update, scroll }: Init): void {
     this.finder = finder;
     this.onUpdate = update;
+    this.onScroll = scroll;
 
     this.initializeFirstVisit(initial);
     this.initializeStateEvents();
@@ -193,7 +197,7 @@ class Visitor {
         }
 
         this.mergeState(error.data, error.partial, error.raw);
-        this.updateComponent(this.state, error.partial, error.raw);
+        this.updateComponent(this.state, error.partial);
 
         return Promise.reject(error);
       })
@@ -299,7 +303,6 @@ class Visitor {
 
   protected updateComponent(state: State, replace: boolean = false, keepPosition: boolean = false) {
     return this.finder(state.view).then((component) => {
-      this.resetScrollPosition(keepPosition);
       this.updateHead(state.props.meta);
 
       if (replace) {
@@ -308,16 +311,14 @@ class Visitor {
         this.pushHistoryState(state);
       }
 
-      this.onUpdate.call(this, { component, state });
+      this.onUpdate.call(this, { component, state }).then(() => {
+        if (!keepPosition) {
+          this.onScroll.call(this);
+        }
+      });
 
       return state;
     });
-  }
-
-  protected resetScrollPosition(keepPosition: boolean = false) {
-    if (!keepPosition) {
-      window.scrollTo(0, 0);
-    }
   }
 
   protected updateHead(meta?: Meta[]) {

@@ -1,7 +1,8 @@
 import { type Finder, type ComponentState, initialize, type State, type Session, type Meta, type ComponentWithLayout } from '../visitor';
-import { h, shallowRef, defineComponent, type PropType, provide, ref, type Ref } from 'vue';
+import { h, shallowRef, defineComponent, type PropType, provide, ref, type Ref, nextTick } from 'vue';
 import { VisitorContextKey } from '../dependencies/visitor';
 import type { Toast } from '../composables/toasts';
+import { findScrollParent } from '../utils/scroll';
 
 export type VisitorContext = {
   query: Ref<Record<string, any>>;
@@ -30,6 +31,8 @@ export const Router = defineComponent({
     const toasts = ref(props.initial.toasts);
     const properties = ref(props.initial.props);
 
+    const visitorHtmlElement = ref();
+
     if (!isServer) {
       initialize({
         finder: props.finder,
@@ -42,6 +45,11 @@ export const Router = defineComponent({
           shared.value = args.state.shared;
           toasts.value = args.state.toasts;
           properties.value = args.state.props;
+
+          return nextTick();
+        },
+        scroll() {
+          findScrollParent(visitorHtmlElement.value)?.scrollTo(0, 0);
         },
       });
     }
@@ -61,13 +69,13 @@ export const Router = defineComponent({
       let children = h(component.value, { ...properties.value, key: location.value });
 
       if (component.value.layout) {
-        return wrap(component.value.layout).concat(children).reverse().reduce((child, layout) => {
+        children = wrap(component.value.layout).concat(children).reverse().reduce((child, layout) => {
           layout.inheritAttrs = !!layout.inheritAttrs;
           return h(layout, properties.value, () => child);
         });
       }
 
-      return children;
+      return h('div', { id: 'visitor', ref: (el) => visitorHtmlElement.value = el }, children);
     };
   },
 });
