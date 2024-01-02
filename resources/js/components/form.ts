@@ -15,10 +15,10 @@ function createFormContext(initial: any) {
     return lodashGet(data.value, name, fallback);
   }
 
-  function set(name: string, value: any, callback: () => void) {
+  function set(name: string, value: any, callback?: () => void) {
     lodashSet(data.value, name, value);
     errors.value[name] = [];
-    callback();
+    callback?.();
   }
 
   return { data, errors, submitting, get, set };
