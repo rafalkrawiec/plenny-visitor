@@ -1,4 +1,4 @@
-import lodashMerge from 'lodash.merge';
+import lodashMerge from 'lodash.mergewith';
 import { type Component } from 'vue';
 import { Request, type Method, type Body } from './client/request';
 import { type Response } from './client/response';
@@ -226,7 +226,11 @@ class Visitor {
     // want to only partially update the state that has changed,
     // without overriding possibly dirty parts of the form.
     if (fresh.merge?.shared) {
-      lodashMerge(this.state.shared, fresh.merge.shared);
+      lodashMerge(this.state.shared, fresh.merge.shared, (object, value) => {
+        if (object instanceof Array || value instanceof Array) {
+          return value;
+        }
+      });
     }
 
     // In case of "raw" request which are usually just API calls to get some
@@ -254,7 +258,11 @@ class Visitor {
       });
 
       if (fresh.merge?.props) {
-        lodashMerge(this.state.props, fresh.merge.props);
+        lodashMerge(this.state.props, fresh.merge.props, (object, value) => {
+          if (object instanceof Array || value instanceof Array) {
+            return value;
+          }
+        });
       }
 
       return this.state;
