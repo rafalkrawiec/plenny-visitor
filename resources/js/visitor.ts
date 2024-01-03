@@ -360,7 +360,7 @@ class Visitor {
           break;
       }
 
-      element.setAttribute('visitor', '');
+      element.setAttribute('data-visitor', '');
 
       document.head.append(element);
     });
