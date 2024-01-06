@@ -1,12 +1,17 @@
-import { type Finder, type ComponentState, initialize, type State, type ComponentWithLayout } from '../visitor';
-import { h, defineComponent, type PropType, provide, ref, nextTick, markRaw, type Ref } from 'vue';
+import { type Finder, type ComponentState, initialize, type State, type Session, type Meta, type ComponentWithLayout } from '../visitor';
+import { h, shallowRef, defineComponent, type PropType, provide, ref, type Ref, nextTick } from 'vue';
 import { VisitorContextKey } from '../dependencies/visitor';
+import type { Toast } from '../composables/toasts';
 import { findScrollParent } from '../utils/scroll';
 
-export type VisitorContext = Ref<State>;
-
-const component = ref();
-const context = ref<State>();
+export type VisitorContext = {
+  query: Ref<Record<string, any>>;
+  session: Ref<Session>;
+  location: Ref<string>;
+  shared: Ref<Record<string, any>>;
+  toasts: Ref<Toast[]>;
+  properties: Ref<Record<string, any> & { meta?: Meta[] }>;
+};
 
 export const Router = defineComponent({
   name: 'VisitorRouter',
@@ -18,8 +23,13 @@ export const Router = defineComponent({
   setup(props) {
     const isServer = typeof window === 'undefined';
 
-    component.value = markRaw(props.component);
-    context.value = props.initial;
+    const component = shallowRef(props.component);
+    const query = ref(props.initial.query);
+    const session = ref(props.initial.session);
+    const location = ref(props.initial.location);
+    const shared = ref(props.initial.shared);
+    const toasts = ref(props.initial.toasts);
+    const properties = ref(props.initial.props);
 
     const visitorHtmlElement = ref();
 
@@ -28,8 +38,14 @@ export const Router = defineComponent({
         finder: props.finder,
         initial: props.initial,
         update(args: ComponentState) {
-          component.value = markRaw(args.component);
-          context.value = args.state;
+          component.value = args.component;
+          query.value = args.state.query;
+          session.value = args.state.session;
+          location.value = args.state.location;
+          shared.value = args.state.shared;
+          toasts.value = args.state.toasts;
+          properties.value = args.state.props;
+
           return nextTick();
         },
         scroll() {
@@ -38,17 +54,24 @@ export const Router = defineComponent({
       });
     }
 
-    provide(VisitorContextKey, context as VisitorContext);
+    provide(VisitorContextKey, {
+      query,
+      session,
+      location,
+      shared,
+      toasts,
+      properties,
+    });
 
     return () => {
       component.value.inheritAttrs = !!component.value.inheritAttrs;
 
-      let children = h(component.value, { ...context.value!.props, key: context.value!.location });
+      let children = h(component.value, { ...properties.value, key: location.value });
 
       if (component.value.layout) {
         children = wrap(component.value.layout).concat(children).reverse().reduce((child, layout) => {
           layout.inheritAttrs = !!layout.inheritAttrs;
-          return h(layout, context.value!.props, () => child);
+          return h(layout, properties.value, () => child);
         });
       }
 

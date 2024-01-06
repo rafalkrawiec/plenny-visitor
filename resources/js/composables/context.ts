@@ -1,4 +1,4 @@
-import { inject, computed } from 'vue';
+import { inject } from 'vue';
 import { VisitorContextKey } from '../dependencies/visitor';
 
 
@@ -9,7 +9,7 @@ export function useQuery() {
     throw new Error('Missing visitor context!');
   }
 
-  return computed(() => ctx.value.query);
+  return ctx.query;
 }
 
 export function useLocation() {
@@ -19,7 +19,7 @@ export function useLocation() {
     throw new Error('Missing visitor context!');
   }
 
-  return computed(() => ctx.value.location);
+  return ctx.location;
 }
 
 export function useSession() {
@@ -29,7 +29,7 @@ export function useSession() {
     throw new Error('Missing visitor context!');
   }
 
-  return computed(() => ctx.value.session);
+  return ctx.session;
 }
 
 export function useShared() {
@@ -39,5 +39,5 @@ export function useShared() {
     throw new Error('Missing visitor context!');
   }
 
-  return computed(() => ctx.value.shared);
+  return ctx.shared;
 }
