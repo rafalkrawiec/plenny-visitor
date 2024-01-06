@@ -1,6 +1,5 @@
 import { defineComponent, ref, computed, h, type PropType } from 'vue';
-import { useLocation } from '../composables/context';
-import { $dispatch } from '../visitor';
+import { $dispatch, useLocation } from '../visitor';
 import { type Body, type Method } from '../client/request';
 
 function shouldInterceptEvent(event: MouseEvent, href: string, target?: string) {

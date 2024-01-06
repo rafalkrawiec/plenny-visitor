@@ -1,8 +1,7 @@
-import { type Finder, type ComponentState, initialize, type State, type Session, type Meta, type ComponentWithLayout } from '../visitor';
-import { h, shallowRef, defineComponent, type PropType, provide, ref, type Ref, nextTick } from 'vue';
-import { VisitorContextKey } from '../dependencies/visitor';
-import type { Toast } from '../composables/toasts';
+import { type Finder, type ComponentState, initialize, type State, type ComponentWithLayout, type Session, $toasts } from '../visitor';
+import { h, defineComponent, type PropType, ref, nextTick, markRaw, shallowRef, type Ref, toRaw } from 'vue';
 import { findScrollParent } from '../utils/scroll';
+import { hash } from '@plenny/support';
 
 export type VisitorContext = {
   query: Ref<Record<string, any>>;
@@ -10,8 +9,15 @@ export type VisitorContext = {
   location: Ref<string>;
   shared: Ref<Record<string, any>>;
   toasts: Ref<Toast[]>;
-  properties: Ref<Record<string, any> & { meta?: Meta[] }>;
 };
+
+const component = shallowRef();
+const query = ref();
+const session = ref();
+const location = ref();
+const shared = ref();
+const toasts = ref();
+const properties = ref();
 
 export const Router = defineComponent({
   name: 'VisitorRouter',
@@ -23,13 +29,13 @@ export const Router = defineComponent({
   setup(props) {
     const isServer = typeof window === 'undefined';
 
-    const component = shallowRef(props.component);
-    const query = ref(props.initial.query);
-    const session = ref(props.initial.session);
-    const location = ref(props.initial.location);
-    const shared = ref(props.initial.shared);
-    const toasts = ref(props.initial.toasts);
-    const properties = ref(props.initial.props);
+    component.value = markRaw(props.component);
+    query.value = props.initial.query;
+    session.value = props.initial.session;
+    location.value = props.initial.location;
+    shared.value = props.initial.shared;
+    toasts.value = props.initial.toasts;
+    properties.value = props.initial.props;
 
     const visitorHtmlElement = ref();
 
@@ -38,13 +44,16 @@ export const Router = defineComponent({
         finder: props.finder,
         initial: props.initial,
         update(args: ComponentState) {
-          component.value = args.component;
+          if (args.component) {
+            component.value = markRaw(args.component);
+            properties.value = args.state.props;
+          }
+
           query.value = args.state.query;
           session.value = args.state.session;
           location.value = args.state.location;
           shared.value = args.state.shared;
           toasts.value = args.state.toasts;
-          properties.value = args.state.props;
 
           return nextTick();
         },
@@ -53,15 +62,6 @@ export const Router = defineComponent({
         },
       });
     }
-
-    provide(VisitorContextKey, {
-      query,
-      session,
-      location,
-      shared,
-      toasts,
-      properties,
-    });
 
     return () => {
       component.value.inheritAttrs = !!component.value.inheritAttrs;
@@ -85,4 +85,54 @@ export type RouterProps = RouterComponent['$props'];
 
 function wrap(layout) {
   return Array.isArray(layout) ? layout : [layout];
+}
+
+export function useQuery() {
+  return query;
+}
+
+export function useLocation() {
+  return location;
+}
+
+export function useSession() {
+  return session;
+}
+
+export function useShared() {
+  return shared;
+}
+
+export type ToastKind = 'primary' | 'transparent' | 'danger' | 'success' | 'severe' | 'warning' | 'info';
+
+export interface Toast {
+  id: string,
+  description: string,
+  kind: ToastKind,
+  duration: number,
+}
+
+interface ToastCreateOptions {
+  id?: string,
+  description: string,
+  kind?: ToastKind,
+  duration?: number,
+}
+
+export function useToasts() {
+  function create({ description, id = undefined, kind = 'info', duration = 3 }: ToastCreateOptions) {
+    toasts.value.push({ id: id || hash(), description, kind, duration });
+    $toasts(toRaw(toasts.value));
+  }
+
+  function remove(id: string) {
+    toasts.value = toasts.value.filter((toast) => toast.id !== id);
+    $toasts(toRaw(toasts.value));
+  }
+
+  function isFirst(id: string) {
+    return toasts.value[0]?.id === id;
+  }
+
+  return { toasts, isFirst, create, remove };
 }

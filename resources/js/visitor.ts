@@ -2,14 +2,13 @@ import lodashMerge from 'lodash.mergewith';
 import { type Component } from 'vue';
 import { Request, type Method, type Body } from './client/request';
 import { type Response } from './client/response';
-import { type Toast } from './composables/toasts';
+import { type Toast } from './components/router';
 
 export { default as VisitorForm } from './components/form';
 export { default as VisitorLink } from './components/link';
+export { useSession, useQuery, useLocation, useShared, useToasts } from './components/router';
 
-export * from './composables/context';
 export * from './composables/form';
-export * from './composables/toasts';
 export * from './app/factory';
 export * from './app/plugin';
 export * from './utils/route';
@@ -75,7 +74,7 @@ export type ComponentWithLayout = Component & {
 }
 
 export type ComponentState = {
-  component: ComponentWithLayout;
+  component?: ComponentWithLayout;
   state: State;
 };
 
@@ -173,17 +172,18 @@ class Visitor {
           });
         }
 
+        if (res.partial || res.raw) {
+          let state = this.callUpdateHandler(this.state, true, true);
+          return Promise.resolve(res.raw ? res.data.raw : state);
+        }
+
         // Otherwise, we can simply update the component with fresh state.
-        return this.updateComponent(
-          this.state,
-          res.partial || replace,
-          res.partial || keepPosition,
-        ).then((state) => {
+        return this.updateComponent(this.state, replace, keepPosition).then((state) => {
           if (res.raw) {
             return res.data.raw;
+          } else {
+            return state;
           }
-
-          return state;
         });
       })
       .catch((error: Response) => {
@@ -245,7 +245,7 @@ class Visitor {
     // and query state, which might change between those requests and might be
     // responsible for page changes.
     Object.assign(this.state, {
-      location: fresh.location,
+      location: fresh.location.replace(/\/$/, ''),
       query: fresh.query,
     });
 
@@ -311,22 +311,26 @@ class Visitor {
 
   protected updateComponent(state: State, replace: boolean = false, keepPosition: boolean = false) {
     return this.finder(state.view).then((component) => {
-      this.updateHead(state.props.meta);
-
-      if (replace) {
-        this.replaceHistoryState(state);
-      } else {
-        this.pushHistoryState(state);
-      }
-
-      this.onUpdate.call(this, { component, state }).then(() => {
-        if (!keepPosition) {
-          this.onScroll.call(this);
-        }
-      });
-
-      return state;
+      return this.callUpdateHandler(state, replace, keepPosition, component);
     });
+  }
+
+  protected callUpdateHandler(state: State, replace: boolean, keepPosition: boolean, component?: Component) {
+    this.updateHead(state.props.meta);
+
+    if (replace) {
+      this.replaceHistoryState(state);
+    } else {
+      this.pushHistoryState(state);
+    }
+
+    this.onUpdate.call(this, { component, state }).then(() => {
+      if (!keepPosition) {
+        this.onScroll.call(this);
+      }
+    });
+
+    return state;
   }
 
   protected updateHead(meta?: Meta[]) {
