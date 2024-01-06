@@ -2,7 +2,7 @@
     "name": "@plenny/visitor",
     "description": "Bridge package for Vue apps with Laravel backend.",
     "keywords": ["plenny", "vue", "laravel"],
-    "version": "0.1.5",
+    "version": "0.1.6",
     "license": "MIT",
     "homepage": "https://github.com/rafalkrawiec/plenny-visitor",
     "repository": {
