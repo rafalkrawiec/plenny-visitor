@@ -173,7 +173,7 @@ class Visitor {
         }
 
         if (res.partial || res.raw) {
-          let state = this.callUpdateHandler(this.state, true, true);
+          let state = this.callUpdateHandler(this.state, res.raw ? undefined : true, true);
           return Promise.resolve(res.raw ? res.data.raw : state);
         }
 
@@ -318,10 +318,12 @@ class Visitor {
   protected callUpdateHandler(state: State, replace: boolean, keepPosition: boolean, component?: Component) {
     this.updateHead(state.props.meta);
 
-    if (replace) {
-      this.replaceHistoryState(state);
-    } else {
-      this.pushHistoryState(state);
+    if (replace != undefined) {
+      if (replace) {
+        this.replaceHistoryState(state);
+      } else {
+        this.pushHistoryState(state);
+      }
     }
 
     this.onUpdate.call(this, { component, state }).then(() => {
