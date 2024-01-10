@@ -94,7 +94,7 @@ type Options = {
   url: string;
   body?: Body;
   replace?: boolean;
-  keepPosition?: boolean;
+  scroll?: boolean;
 }
 
 let channel: BroadcastChannel;
@@ -138,7 +138,7 @@ class Visitor {
     return document.dispatchEvent(new CustomEvent(`visitor:${name}`, options));
   }
 
-  public dispatch({ method, url, body = null, replace = false, keepPosition = false }: Options) {
+  public dispatch({ method, url, body = null, replace = false, scroll = false }: Options): Promise<any> {
     if (this.request !== undefined) {
       this.request.abort();
     }
@@ -146,64 +146,63 @@ class Visitor {
     this.fireEvent('start');
     let request = new Request(method, url, body);
 
-    return request.send()
-      .then((res) => {
-        // First we want to merge state within visitor to apply any partial
-        // changes to the state props/shared parts.
-        this.mergeState(res.data, res.partial, res.raw);
+    return request.send().then((res) => {
+      // First we want to merge state within visitor to apply any partial
+      // changes to the state props/shared parts.
+      this.mergeState(res.data, res.partial, res.raw);
 
-        // Now once state is merged, we can call redirect when provided.
-        // There are two modes for redirect, with or without a hard reload.
-        //
-        // When hard reload option is provided, we simply change window location,
-        // and we return promise which never resolves. This will block unnecessary
-        // further code execution.
-        if (res.redirect) {
-          if (res.redirect.reload) {
-            return new Promise(() => {
-              window.location.href = res.redirect.target;
-            });
-          }
-
-          return this.dispatch({
-            method: 'GET',
-            url: res.redirect.target,
-            replace: false,
+      // Now once state is merged, we can call redirect when provided.
+      // There are two modes for redirect, with or without a hard reload.
+      //
+      // When hard reload option is provided, we simply change window location,
+      // and we return promise which never resolves. This will block unnecessary
+      // further code execution.
+      if (res.redirect) {
+        if (res.redirect.reload) {
+          return new Promise(() => {
+            window.location.href = res.redirect.target;
           });
         }
 
-        if (res.partial || res.raw) {
-          let state = this.callUpdateHandler(this.state, res.raw ? undefined : true, true);
-          return Promise.resolve(res.raw ? res.data.raw : state);
+        return this.dispatch({ method: 'GET', url: res.redirect.target, replace: false });
+      }
+
+      if (res.partial || res.raw) {
+        let state = this.callUpdateHandler(this.state, res.raw ? undefined : true, true);
+
+        return Promise.resolve(res.raw ? res.data.raw : state);
+      }
+
+      // Otherwise, we can simply update the component with fresh state.
+      return this.updateComponent(this.state, replace, scroll).then((state) => {
+        if (res.raw) {
+          return res.data.raw;
+        } else {
+          return state;
         }
-
-        // Otherwise, we can simply update the component with fresh state.
-        return this.updateComponent(this.state, replace, keepPosition).then((state) => {
-          if (res.raw) {
-            return res.data.raw;
-          } else {
-            return state;
-          }
-        });
-      })
-      .catch((error: Response) => {
-        console.error(error);
-
-        this.fireEvent('error');
-
-        if (error.status === 419) {
-          window.location.reload();
-          return Promise.reject(error);
-        }
-
-        this.mergeState(error.data, error.partial, error.raw);
-        this.updateComponent(this.state, error.partial);
-
-        return Promise.reject(error);
-      })
-      .finally(() => {
-        this.fireEvent('done');
       });
+    }).catch((error: Response) => {
+      console.error(error);
+
+      this.fireEvent('error');
+
+      if (error.status === 419) {
+        window.location.reload();
+        return Promise.reject(error);
+      }
+
+      this.mergeState(error.data, error.partial, error.raw);
+
+      if (error.status === 422) {
+        return Promise.reject(error);
+      }
+
+      this.updateComponent(this.state, error.partial);
+
+      return Promise.reject(error);
+    }).finally(() => {
+      this.fireEvent('done');
+    });
   }
 
   public toasts(fresh: Toast[]) {
@@ -211,9 +210,9 @@ class Visitor {
   }
 
   protected mergeState(fresh: ResponseState, partial: boolean = false, raw: boolean = false): State {
-    // We always update shared state, session and version between visitor calls.
-    // These are kinda global states kept between calls and should be updated
-    // With every requst to the server.
+    // We always update shared state, session and version between visitor calls,
+    // as these are kind of global states kept between calls and should be
+    // updated with every request to the server.
     Object.assign(this.state, {
       shared: { ...this.state.shared, ...fresh.shared },
       toasts: [...this.state.toasts, ...fresh.toasts],
@@ -281,7 +280,7 @@ class Visitor {
       method: 'GET',
       url: this.state.location,
       replace: true,
-      keepPosition: true,
+      scroll: true,
     });
   }
 
@@ -309,13 +308,13 @@ class Visitor {
     }
   }
 
-  protected updateComponent(state: State, replace: boolean = false, keepPosition: boolean = false) {
+  protected updateComponent(state: State, replace: boolean = false, scroll: boolean = false) {
     return this.finder(state.view).then((component) => {
-      return this.callUpdateHandler(state, replace, keepPosition, component);
+      return this.callUpdateHandler(state, replace, scroll, component);
     });
   }
 
-  protected callUpdateHandler(state: State, replace: boolean, keepPosition: boolean, component?: Component) {
+  protected callUpdateHandler(state: State, replace: boolean | undefined, scroll: boolean, component?: Component) {
     this.updateHead(state.props.meta);
 
     if (replace != undefined) {
@@ -327,7 +326,7 @@ class Visitor {
     }
 
     this.onUpdate.call(this, { component, state }).then(() => {
-      if (!keepPosition) {
+      if (!scroll) {
         this.onScroll.call(this);
       }
     });
