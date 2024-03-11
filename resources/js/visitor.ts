@@ -287,7 +287,7 @@ class Visitor {
   protected pushHistoryState(state: State) {
     this.state = state;
 
-    window.history.pushState(state.location, '', state.location);
+    window.history.pushState({ loc: state.location }, '', state.location);
 
     return state;
   }
@@ -295,14 +295,14 @@ class Visitor {
   protected replaceHistoryState(state: State) {
     this.state = state;
 
-    window.history.replaceState(state.location, '', state.location);
+    window.history.replaceState({ loc: state.location }, '', state.location);
 
     return state;
   }
 
   protected handlePopstateEvent(event: PopStateEvent) {
     if (event.state !== null) {
-      this.dispatch({ method: 'GET', url: event.state, replace: true });
+      this.dispatch({ method: 'GET', url: event.state.loc, replace: true });
     } else {
       this.replaceHistoryState(this.state);
     }

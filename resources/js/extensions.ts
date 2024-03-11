@@ -11,10 +11,24 @@ declare global {
 
   var __routing_host: string;
   var __routing_routes: Record<string, Route>;
-}
 
-declare global {
   var __app_timezone: string;
+
+  export interface Paginator<T = any> {
+    data: T[];
+    first_page_url: string;
+    prev_page_url: string | null;
+    links: { url: string | null; label: string; active: boolean; }[];
+    next_page_url: string | null;
+    last_page_url: string;
+    path: string;
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    from: number | null;
+    to: number | null;
+    total: number;
+  }
 }
 
 declare module '@vue/runtime-core' {

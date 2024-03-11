@@ -48,20 +48,23 @@ export default defineComponent({
       context.submitting.value = true;
       context.errors.value = {};
 
-      handler(context.data.value).then(() => {
-        context.data.value = props.initial;
-      }).catch((res: Response) => {
-        context.errors.value = res.errors;
+      handler(context.data.value)
+        .then(() => {
+          context.data.value = props.raw || lodashCloneDeep(toValue(props.initial));
+        })
+        .catch((res: Response) => {
+          context.errors.value = res.errors;
 
-        nextTick(() => {
-          let err = document.querySelector('.control-error');
-          let wrapper = err?.closest('.control-wrapper');
+          nextTick(() => {
+            let err = document.querySelector('.control-error');
+            let wrapper = err?.closest('.control-wrapper');
 
-          (wrapper || err)?.scrollIntoView(true);
+            (wrapper || err)?.scrollIntoView(true);
+          });
+        })
+        .finally(() => {
+          context.submitting.value = false;
         });
-      }).finally(() => {
-        context.submitting.value = false;
-      });
     }
 
     function onSubmit(event: Event) {
