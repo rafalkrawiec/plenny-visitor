@@ -193,13 +193,9 @@ class Visitor {
 
       this.mergeState(error.data, error.partial, error.raw);
 
-      if (error.status === 422) {
+      return this.updateComponent(this.state, error.partial, false).then(() => {
         return Promise.reject(error);
-      }
-
-      this.updateComponent(this.state, error.partial);
-
-      return Promise.reject(error);
+      });
     }).finally(() => {
       this.fireEvent('done');
     });
@@ -326,7 +322,7 @@ class Visitor {
     }
 
     this.onUpdate.call(this, { component, state }).then(() => {
-      if (!scroll) {
+      if (scroll) {
         this.onScroll.call(this);
       }
     });
