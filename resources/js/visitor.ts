@@ -168,7 +168,7 @@ class Visitor {
       }
 
       if (res.partial || res.raw) {
-        let state = this.callUpdateHandler(this.state, res.raw ? undefined : true, true);
+        let state = this.callUpdateHandler(this.state, res.raw ? undefined : true, false);
 
         return Promise.resolve(res.raw ? res.data.raw : state);
       }
