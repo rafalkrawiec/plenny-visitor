@@ -138,7 +138,7 @@ class Visitor {
     return document.dispatchEvent(new CustomEvent(`visitor:${name}`, options));
   }
 
-  public dispatch({ method, url, body = null, replace = false, scroll = false }: Options): Promise<any> {
+  public dispatch({ method, url, body = null, replace = false, scroll = true }: Options): Promise<any> {
     if (this.request !== undefined) {
       this.request.abort();
     }
@@ -164,7 +164,7 @@ class Visitor {
           });
         }
 
-        return this.dispatch({ method: 'GET', url: res.redirect.target, replace: false });
+        return this.dispatch({ method: 'GET', url: res.redirect.target, replace: false, scroll: true });
       }
 
       if (res.partial || res.raw) {
@@ -193,7 +193,7 @@ class Visitor {
 
       this.mergeState(error.data, error.partial, error.raw);
 
-      return this.updateComponent(this.state, error.partial, false).then(() => {
+      return this.updateComponent(this.state, error.partial, true).then(() => {
         return Promise.reject(error);
       });
     }).finally(() => {

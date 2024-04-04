@@ -5,14 +5,14 @@ import { url } from './utils/url';
 import { $delete, $dispatch, $get, $patch, $post, $put, $redirect, $refresh, $toasts } from './visitor';
 
 declare global {
-  var __i18n_available: string[];
-  var __i18n_current: string;
-  var __i18n_fallback: string;
+  let __i18n_available: string[];
+  let __i18n_current: string;
+  let __i18n_fallback: string;
 
-  var __routing_host: string;
-  var __routing_routes: Record<string, Route>;
+  let __routing_host: string;
+  let __routing_routes: Record<string, Route>;
 
-  var __app_timezone: string;
+  let __app_timezone: string;
 
   export interface Paginator<T = any> {
     data: T[];
