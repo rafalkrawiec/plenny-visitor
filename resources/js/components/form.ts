@@ -6,10 +6,10 @@ import { h, ref, toValue, toRef, defineComponent, provide, nextTick } from 'vue'
 import type { Response } from '../client/response';
 import { VisitorFormKey } from '../dependencies/visitor';
 
-function createFormContext(initial: any) {
+function createFormContext<T = any>(initial: T) {
   const data = toRef(initial);
-  const errors = ref({});
-  const submitting = ref(false);
+  const errors = ref({} as Record<string, string[]>);
+  const submitting = ref(false as boolean);
 
   function get(name: string, fallback: any = null) {
     return lodashGet(data.value, name, fallback);
@@ -24,7 +24,7 @@ function createFormContext(initial: any) {
   return { data, errors, submitting, get, set };
 }
 
-export type VisitorFormContext = ReturnType<typeof createFormContext>;
+export type VisitorFormContext<T = any> = ReturnType<typeof createFormContext<T>>;
 export type VisitorFormHandler = (data: any) => Promise<Response>;
 
 export default defineComponent({

@@ -27,7 +27,7 @@ export type VisitorControl = {
   hasErrors: ComputedRef<boolean>,
 }
 
-export function useVisitorForm(): VisitorFormContext {
+export function useVisitorForm<T = any>(): VisitorFormContext<T> {
   const form = inject(VisitorFormKey, null);
 
   if (!form) {
