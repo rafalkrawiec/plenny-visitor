@@ -58,6 +58,15 @@ export const Router = defineComponent({
           return nextTick();
         },
         scroll() {
+          if (window.location.hash) {
+            let element = document.querySelector(window.location.hash);
+
+            if (element) {
+              element.scrollIntoView();
+              return;
+            }
+          }
+
           findScrollParent(visitorHtmlElement.value)?.scrollTo(0, 0);
         },
       });

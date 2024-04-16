@@ -144,12 +144,14 @@ class Visitor {
     }
 
     this.fireEvent('start');
+
     let request = new Request(method, url, body);
+    let parsed = new URL(url);
 
     return request.send().then((res) => {
       // First we want to merge state within visitor to apply any partial
       // changes to the state props/shared parts.
-      this.mergeState(res.data, res.partial, res.raw);
+      this.mergeState(parsed, res.data, res.partial, res.raw);
 
       // Now once state is merged, we can call redirect when provided.
       // There are two modes for redirect, with or without a hard reload.
@@ -191,7 +193,7 @@ class Visitor {
         return Promise.reject(error);
       }
 
-      this.mergeState(error.data, error.partial, error.raw);
+      this.mergeState(parsed, error.data, error.partial, error.raw);
 
       return this.updateComponent(this.state, error.partial, true).then(() => {
         return Promise.reject(error);
@@ -205,7 +207,7 @@ class Visitor {
     this.state.toasts = fresh;
   }
 
-  protected mergeState(fresh: ResponseState, partial: boolean = false, raw: boolean = false): State {
+  protected mergeState(url: URL, fresh: ResponseState, partial: boolean = false, raw: boolean = false): State {
     // We always update shared state, session and version between visitor calls,
     // as these are kind of global states kept between calls and should be
     // updated with every request to the server.
@@ -240,7 +242,7 @@ class Visitor {
     // and query state, which might change between those requests and might be
     // responsible for page changes.
     Object.assign(this.state, {
-      location: fresh.location.replace(/\/$/, ''),
+      location: fresh.location.replace(/\/$/, '') + url.hash,
       query: fresh.query,
     });
 
