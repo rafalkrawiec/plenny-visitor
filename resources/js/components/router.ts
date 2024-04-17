@@ -1,5 +1,5 @@
 import { type Finder, type ComponentState, initialize, type State, type ComponentWithLayout, type Session, $toasts } from '../visitor';
-import { h, defineComponent, type PropType, ref, nextTick, markRaw, shallowRef, type Ref, toRaw } from 'vue';
+import { h, defineComponent, type PropType, ref, nextTick, markRaw, shallowRef, type Ref, toRaw, resolveComponent } from 'vue';
 import { findScrollParent } from '../utils/scroll';
 import { hash } from '@plenny/support';
 
@@ -79,6 +79,7 @@ export const Router = defineComponent({
 
       if (component.value.layout) {
         children = wrap(component.value.layout).concat(children).reverse().reduce((child, layout) => {
+          layout = typeof layout === 'string' ? resolveComponent(layout) : layout;
           layout.inheritAttrs = !!layout.inheritAttrs;
           return h(layout, properties.value, () => child);
         });
