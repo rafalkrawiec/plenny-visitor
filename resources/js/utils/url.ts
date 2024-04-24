@@ -1,9 +1,11 @@
 import { toRaw } from 'vue';
 
-export function url(uri: string, params: Record<string, any>, hash?: string, base?: string | null) {
+export function url(uri: string, params?: Record<string, any>, hash?: string, base?: string | null) {
   const url = new URL(uri, base || __routing_host);
 
-  attachSearchParameters(url.searchParams, params);
+  if (params) {
+    attachSearchParameters(url.searchParams, params);
+  }
 
   if (hash) {
     url.hash = hash;
