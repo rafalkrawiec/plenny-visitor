@@ -75,7 +75,7 @@ export const Router = defineComponent({
     return () => {
       component.value.inheritAttrs = !!component.value.inheritAttrs;
 
-      let children = h(component.value, { ...properties.value, key: location.value });
+      let children = h(component.value, { ...properties.value });
 
       if (component.value.layout) {
         children = wrap(component.value.layout).concat(children).reverse().reduce((child, layout) => {
