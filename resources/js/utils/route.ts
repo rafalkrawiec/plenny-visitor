@@ -28,6 +28,10 @@ function localizeName(name: string) {
     return name;
   }
 
+  if (!name.startsWith('web.')) {
+    return name;
+  }
+
   if (__i18n_current !== __i18n_fallback) {
     return `${__i18n_current}.${name}`;
   }

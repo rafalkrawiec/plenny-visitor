@@ -27,6 +27,7 @@ export class Request {
       this.xhr.open(this.method, this.url, true);
 
       this.xhr.setRequestHeader('Accept', 'application/json');
+      this.xhr.setRequestHeader('Language', __i18n_current);
       this.xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       this.xhr.setRequestHeader('X-Visitor', 'true');
       this.xhr.setRequestHeader('X-XSRF-TOKEN', this.readCookie('XSRF-TOKEN'));
