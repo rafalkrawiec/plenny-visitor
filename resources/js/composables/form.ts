@@ -9,9 +9,9 @@ export const VisitorControl = {
   name: { type: String, required: false },
   required: { type: Boolean, required: false, default: false },
   errors: { type: Array as PropType<string[]>, required: false, default: [] },
-  value: { required: false },
-  modelValue: { required: false },
-  defaultValue: { required: false, default: null },
+  value: { type: [String, Number, Boolean, Array], required: false },
+  modelValue: { type: [String, Number, Boolean, Array], required: false },
+  defaultValue: { type: [String, Number, Boolean, Array], required: false, default: null },
 };
 
 export type VisitorControlProps = ExtractPropTypes<typeof VisitorControl>;
