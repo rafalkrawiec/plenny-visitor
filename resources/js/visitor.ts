@@ -22,6 +22,10 @@ export type Meta = {
   name: string;
   content: string;
 } | {
+  type: 'link',
+  rel: string;
+  href: string;
+} | {
   type: 'snippet',
   content: string;
 };
@@ -354,6 +358,12 @@ class Visitor {
           element = document.createElement('meta');
           element.setAttribute('name', tag.name);
           element.setAttribute('content', tag.content);
+          break;
+
+        case 'link':
+          element = document.createElement('link');
+          element.setAttribute('rel', tag.rel);
+          element.setAttribute('href', tag.href);
           break;
 
         case 'snippet':
