@@ -400,36 +400,36 @@ export const defaultSession: Session = {
   flash: {},
 };
 
-export const $get = (url: string, replace: boolean = false) => {
-  return visitor.dispatch({ method: 'GET', url, replace });
+export const $get = (url: string, replace: boolean = false, scroll: boolean = true) => {
+  return visitor.dispatch({ method: 'GET', url, replace, scroll });
 };
 
-export const $post = (url: string, body?: Body, replace: boolean = false) => {
-  return visitor.dispatch({ method: 'POST', url, body, replace });
+export const $post = (url: string, body?: Body, replace: boolean = false, scroll: boolean = true) => {
+  return visitor.dispatch({ method: 'POST', url, body, replace, scroll });
 };
 
-export const $patch = (url: string, body?: Body, replace: boolean = false) => {
-  return visitor.dispatch({ method: 'PATCH', url, body, replace });
+export const $patch = (url: string, body?: Body, replace: boolean = false, scroll: boolean = true) => {
+  return visitor.dispatch({ method: 'PATCH', url, body, replace, scroll });
 };
 
-export const $put = (url: string, body?: Body, replace: boolean = false) => {
-  return visitor.dispatch({ method: 'PUT', url, body, replace });
+export const $put = (url: string, body?: Body, replace: boolean = false, scroll: boolean = true) => {
+  return visitor.dispatch({ method: 'PUT', url, body, replace, scroll });
 };
 
-export const $delete = (url: string, replace: boolean = false) => {
-  return visitor.dispatch({ method: 'DELETE', url, replace });
+export const $delete = (url: string, replace: boolean = false, scroll: boolean = true) => {
+  return visitor.dispatch({ method: 'DELETE', url, replace, scroll });
 };
 
-export const $dispatch = (method: Method, url: string, body?: Body, replace: boolean = false) => {
-  return visitor.dispatch({ method, url, body, replace });
+export const $dispatch = (method: Method, url: string, body?: Body, replace: boolean = false, scroll: boolean = true) => {
+  return visitor.dispatch({ method, url, body, replace, scroll });
 };
 
 export const $refresh = () => {
   return visitor.refresh();
 };
 
-export const $redirect = (url: string, replace: boolean = false) => {
-  visitor.dispatch({ method: 'GET', url, replace });
+export const $redirect = (url: string, replace: boolean = false, scroll: boolean = true) => {
+  visitor.dispatch({ method: 'GET', url, replace, scroll });
 };
 
 export const $toasts = (toasts: Toast[]) => {
