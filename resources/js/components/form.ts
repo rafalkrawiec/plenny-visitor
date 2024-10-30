@@ -56,10 +56,7 @@ export default defineComponent({
           context.errors.value = res.errors;
 
           nextTick(() => {
-            let err = document.querySelector('.control-error');
-            let wrapper = err?.closest('.control-wrapper');
-
-            (wrapper || err)?.scrollIntoView(true);
+            document.querySelector('.control__wrapper--error')?.scrollIntoView(true);
           });
         })
         .finally(() => {
